@@ -4,9 +4,9 @@ import Layout from './../../components/Layout'
 import Image from 'next/image'
 import { Shield, Users, Home, Star } from 'lucide-react'
 import { motion } from 'framer-motion'
-import { TeamMember } from '@/types'
 
-const teamMembers: TeamMember[] = [
+
+const teamMembers = [
   {
     name: 'Sarah Johnson',
     role: 'CEO & Founder',
@@ -214,7 +214,7 @@ export default function AboutUs() {
           <p className="text-lg text-blue-100 mb-6 max-w-3xl mx-auto leading-relaxed">
             We commit to maintaining the highest ethical standards while leveraging advanced technology 
             to simplify real estate transactions. Our platform evolves daily through user feedback and 
-            market insights, ensuring we remain at the industry's cutting edge.
+            market insights, ensuring we remain at the industry&apos;s cutting edge.
           </p>
           <div className="mt-8 flex justify-center space-x-6">
             <Image

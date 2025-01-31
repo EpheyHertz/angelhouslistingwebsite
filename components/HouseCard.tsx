@@ -114,7 +114,7 @@ export default function HouseCard({
     // Show appropriate toast
     toast.success(newState ? 'Added to cart! 🛒' : 'Removed from cart! ❌');
     } catch (error) {
-      toast.error('Failed to add to cart',error);
+      toast.error(`Failed to add to cart ${error}`);
     }
     
   };
@@ -140,7 +140,7 @@ export default function HouseCard({
           {!isOwner && (
             <div className="flex items-center space-x-3">
               <Link
-                href={`/profile/${owner?.id || owner?.user_id}`}
+                href={`/profile/${owner?.id || userId}`}
                 className="flex items-center space-x-2 hover:underline"
               >
                 {/* Profile Picture */}
