@@ -156,7 +156,8 @@ export default function HouseOwnerDashboard({ activeTab }: HouseOwnerDashboardPr
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">My Listings</h2>
           {isAddingHouse ? (
-            <AddHouseForm onSubmit={handleAddHouse} onCancel={() => setIsAddingHouse(false)} />
+            // <AddHouseForm onSubmit={handleDeleteHouse} onCancel={() => setIsAddingHouse(false)} />
+            ''
           ) : editingHouse ? (
             <EditHouseForm house={editingHouse} onSubmit={handleEditHouse} onCancel={() => setEditingHouse(null)} />
           ) : (
