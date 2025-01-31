@@ -21,6 +21,7 @@ const eslintConfig = [
       "@typescript-eslint/no-inferrable-types": "off", // Allow redundant type annotations
       "@typescript-eslint/no-non-null-assertion": "off", // Allow `!` non-null assertions
       "@next/next/no-img-element": "off",  // Allow `<img>` usage in Next.js
+      "react/no-unescaped-entities": "off", // Disable rule for unescaped entities
     },
   },
 ];
