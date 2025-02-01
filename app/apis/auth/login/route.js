@@ -37,13 +37,13 @@ export async function POST(req) {
     const userResponse = await api.get(`/users/me`, {
       headers: { Authorization: `Bearer ${access_token}` },
     });
-   console.log("User:",userResponse)
+   
     // Combine login data and user data
     const combinedData = {
       token: loginResponse.data,
       user: userResponse.data,
     };
-    console.log("Full Response", combinedData)  
+    // console.log("Full Response", combinedData)  
 
     // Return combined response
 

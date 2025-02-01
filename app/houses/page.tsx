@@ -10,6 +10,7 @@ import { setLocation, setPriceRange, setBedrooms, resetFilters } from '../../sto
 import { api } from '@/app/lib/api/client';
 import { Loader } from 'lucide-react';
 import { useAuth } from '@/hooks/hooks';
+import axios from 'axios';
 
 interface House {
   id: number;
@@ -65,7 +66,7 @@ export default function Houses() {
 
   const fetchHouses = async () => {
     try {
-      const response = await api.get('apis/houses/all'); // API call
+      const response = await axios.get('apis/houses/all'); // API call
       // console.log('Full response:', response.data); // Debug the full response
 
       // Extract houses from the response

@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../house_listing_frontend/index.tsx", "app/careers/page.jsx", "components/BookingList.jsx", "components/BookingForm.jsx", "app/houses/[id]/page.jsx", "components/HouseCard.jsx", "app/booking/user-management-bookings/page.jsx", "app/terms/page.jsx", "app/contact/page.jsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../house_listing_frontend/index.tsx", "app/careers/page.jsx", "components/BookingList.jsx", "components/BookingForm.jsx", "app/houses/[id]/page.jsx", "components/HouseCard.jsx", "app/booking/user-management-bookings/page.jsx", "app/terms/page.jsx", "app/contact/page.jsx", "app/dashboard/page.jsx"],
   "exclude": ["node_modules"]
 }

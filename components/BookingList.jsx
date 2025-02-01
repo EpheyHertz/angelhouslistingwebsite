@@ -11,26 +11,31 @@ export function BookingList() {
   const [bookings, setBookings] = useState([])
   const [cancelling, setCancelling] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const fetchBookings = async () => {
+    try {
+      const response = await axios.get('/apis/bookings/userBookings')
+      const data = await response.data
+     
+
+      if (Array.isArray(data)) {
+        setBookings(data)
+      } else {
+        console.error('API response is not an array:', data)
+        setBookings([])
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+      setBookings([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+
+
 
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await axios.get('/apis/bookings/userBookings')
-        const data = await response.data
 
-        if (Array.isArray(data)) {
-          setBookings(data)
-        } else {
-          console.error('API response is not an array:', data)
-          setBookings([])
-        }
-      } catch (error) {
-        console.error('Error fetching bookings:', error)
-        setBookings([])
-      } finally {
-        setIsLoading(false)
-      }
-    }
 
     fetchBookings()
   }, [])

@@ -8,6 +8,7 @@ import { OwnercancelBookingById } from '@/app/server-action/booking-actions'
 import { getUserHousesById } from '@/app/server-action/house_actions'
 import toast from 'react-hot-toast'
 import HousesList from './Houselist';
+import axios from 'axios'
 
 interface Booking {
   id: number
@@ -67,7 +68,7 @@ export default function UserDashboard({ activeTab,user }: UserDashboardProps) {
       try {
         // Replace with actual API call
         
-          const response = await api.get(`apis/bookings/userBookings`)
+          const response = await axios.get(`apis/bookings/userBookings`)
           const data = await response.data
           setBookings(data)
           // Mutate data
