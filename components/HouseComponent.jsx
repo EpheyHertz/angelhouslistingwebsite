@@ -160,7 +160,7 @@ export default function HouseDetails({id}) {
 
   if (loading) {
     return (
-      <Layout title="Loading...">
+      
         <div className="flex flex-col items-center justify-center min-h-screen">
           <motion.div
             animate={{ rotate: 360 }}
@@ -169,12 +169,12 @@ export default function HouseDetails({id}) {
             <Loader2 className="h-12 w-12 text-blue-500" />
           </motion.div>
         </div>
-      </Layout>
+      
     )
   }
 
-  if (error) return <Layout title="Error">Error: {error}</Layout>
-  if (!house) return <Layout title="Not Found">House not found</Layout>
+  if (error) return <div className='text-red-600 text-center text-2xl'>Error: {error}</div>
+  if (!house) return <div className='text-2xl dark:text-white text-black'>House not found</div>
 
   return (
     
