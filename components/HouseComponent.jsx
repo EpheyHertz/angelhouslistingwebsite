@@ -30,6 +30,7 @@ import { useAuth } from '../hooks/hooks'
 import EditHouseDetails from './updateHouse'
 import { updateUserHousesById } from '../app/server-action/house_actions'
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api'
+import axios from 'axios'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -70,7 +71,7 @@ export default function HouseDetails({id}) {
     const fetchHouse = async () => {
       try {
         setLoading(true)
-        const response = await api.get(`/apis/houses/house/${id}`)
+        const response = await axios.get(`/apis/houses/house/${id}`)
         setHouse(response.data)
         const comments = await getReviews(id)
         setComments(comments)
