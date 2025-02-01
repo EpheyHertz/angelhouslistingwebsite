@@ -5,6 +5,7 @@ import { Calendar, DollarSignIcon, Home, House, Users } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cancelBookingById } from '@/app/server-action/booking-actions'
+import axios from 'axios'
 
 export function BookingList() {
   const [bookings, setBookings] = useState([])
@@ -14,9 +15,8 @@ export function BookingList() {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch('/apis/bookings/userBookings')
-        const data = await response.json()
-        console.log('API Response:', data) // Debug the response
+        const response = await axios.get('/apis/bookings/userBookings')
+        const data = await response.data
 
         if (Array.isArray(data)) {
           setBookings(data)

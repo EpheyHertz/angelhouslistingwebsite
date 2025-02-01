@@ -71,20 +71,27 @@ export async function deletePropertyById(id) {
   }
 }
 export async function getUserHousesById(id) {
-
   try {
-    const response = await api.get(`/houses/${id}/houses`,{});
+    const response = await api.get(`/houses/${id}/houses`);
   
-    if (response.status !==200) {
+    if (response.status !== 200) {
       throw new Error("Unable to fetch property");
     }
-
-    return await response.data;
+    
+    const houses = response.data;
+    
+    // If houses is an empty array, return an empty array
+    if (!houses || houses.length === 0) {
+      return [];
+    }
+    
+    return houses;
   } catch (error) {
     console.error("Get Property by ID Error:", error);
     return null;
   }
 }
+
 export async function updateUserHousesById(updateData, house_id) {
   // Validate input parameters
   if (!updateData) {
