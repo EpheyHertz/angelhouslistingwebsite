@@ -17,17 +17,17 @@ const backgroundImages = [
 ]
 
 const SignupForm = () => {
-  const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [currentBg, setCurrentBg] = useState(0)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [countries, setCountries] = useState([])
-  const [countryCode, setCountryCode] = useState('')
-  const [previewImage, setPreviewImage] = useState(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [currentBg, setCurrentBg] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [countryCode, setCountryCode] = useState('');
+  const [previewImage, setPreviewImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -41,72 +41,98 @@ const SignupForm = () => {
     zipcode: '',
     phoneNumber: '',
     profilePicture: null,
-  })
+  });
 
   useEffect(() => {
     const fetchCountries = async () => {
-      const response = await fetch('https://restcountries.com/v3.1/all')
-      const data = await response.json()
+      const response = await fetch('https://restcountries.com/v3.1/all');
+      const data = await response.json();
       const sortedCountries = data.sort((a, b) =>
         a.name.common.localeCompare(b.name.common)
-      )
-      setCountries(sortedCountries)
-    }
+      );
+      setCountries(sortedCountries);
+    };
 
     const bgInterval = setInterval(() => {
-      setCurrentBg(prev => (prev + 1) % backgroundImages.length)
-    }, 7000)
+      setCurrentBg((prev) => (prev + 1) % backgroundImages.length);
+    }, 7000);
 
-    fetchCountries()
-    return () => clearInterval(bgInterval)
-  }, [])
+    fetchCountries();
+    return () => clearInterval(bgInterval);
+  }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleImageChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
+    const file = e.target.files[0];
+    if (!file) return;
 
-    setFormData(prev => ({ ...prev, profilePicture: file }))
-    setPreviewImage(URL.createObjectURL(file))
-  }
+    setFormData((prev) => ({ ...prev, profilePicture: file }));
+    setPreviewImage(URL.createObjectURL(file));
+  };
 
   const handleCountryChange = (e) => {
-    const selectedCountry = e.target.value
-    setFormData(prev => ({ ...prev, country: selectedCountry }))
-    
-    const country = countries.find(c => c.name.common === selectedCountry)
-    setCountryCode(country ? country.idd.root + country.idd.suffixes[0] : '')
-  }
+    const selectedCountry = e.target.value;
+    setFormData((prev) => ({ ...prev, country: selectedCountry }));
+
+    const country = countries.find((c) => c.name.common === selectedCountry);
+    setCountryCode(country ? country.idd.root + country.idd.suffixes[0] : '');
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    try {
-      const response = await axios.post('/apis/auth/signup', formData)
-      if (response.status !==201){
-           setError(response.message || "An error occured.Please try Again")
-           setIsLoading(false)
+    e.preventDefault();
+    setError(''); // Clear previous error
+
+    // Validate required fields
+    const requiredFields = [
+      'username',
+      'email',
+      'password',
+      'confirmPassword',
+      'firstName',
+      'lastName',
+      'country',
+      'state',
+      'address',
+      'zipcode',
+      'phoneNumber'
+    ];
+    
+    for (let field of requiredFields) {
+      if (!formData[field]) {
+        setError('Please fill in all fields.');
+        return;
       }
-      else{
-        setIsLoading(false)
+    }
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.post('/apis/auth/signup', formData);
+      if (response.status !== 201) {
+        setError(response.data.message || 'An error occurred. Please try again.');
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
         router.push('/auth/login');
       }
-    }catch (error){
-       setError('An error Occurred!',error);
-       setIsLoading(false)
-     } 
-    
-    finally {
-      setIsLoading(false)
+    } catch (error) {
+      setError('An error occurred!');
+      setIsLoading(false);
     }
-  }
+  };
 
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 2))
-  const prevStep = () => setStep(prev => Math.max(prev - 1, 1))
+  const nextStep = () => setStep((prev) => Math.min(prev + 1, 2));
+  const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
+
 
   return (
     <Layout title="Sign Up | House Listing Platform">
@@ -407,15 +433,16 @@ const SignupForm = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="ml-auto px-6 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg flex items-center gap-2"
+                  disabled={isLoading}
+                  className="ml-auto px-6 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg flex items-center gap-2 disabled:from-green-200  disabled:to-blue-300"
                   onClick={handleSubmit}
                   type="submit"
-                  disabled={isLoading}
+                  
                 >
                   {isLoading ? (
                     <>
                       <Loader className="animate-spin w-5 h-5" />
-                      Creating Account...
+                     Creating Account...
                     </>
                   ) : (
                     'Complete Registration'
@@ -423,13 +450,13 @@ const SignupForm = () => {
                 </motion.button>
               )}
             </div>
-
+            {error && <p style={{ color: 'red' }}>{error}</p>}
             {/* Social Login */}
             <div className="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg flex items-center justify-center gap-2 transition-transform"
-                onClick={() => window.location.href = 'http://127.0.0.1:8000/auth/google'}
+                onClick={() => window.location.href = 'https://angelhouslistingbackendapis.onrender.com/auth/google'}
                 disabled={isLoading}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
