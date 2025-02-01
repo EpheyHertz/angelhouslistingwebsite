@@ -9,6 +9,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { addToCart } from '@/app/server-action/cart-actions';
 import { deletePropertyById } from '@/app/server-action/house_actions';
+import { useAuth } from '@/hooks/hooks';
 
 export default function HouseCard({
   id,
@@ -27,6 +28,8 @@ export default function HouseCard({
   owner,
 }) {
   const router = useRouter();
+  const {user}=useAuth()
+ 
   const [isInCart, setIsInCart] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem(`cart_${id}`) === 'true';
@@ -34,9 +37,17 @@ export default function HouseCard({
     return false;
   });
 
-  const isOwner = userId === owner_id;
+  const isOwner = 
+  (user?.id && owner?.id && user.id === owner.id) || 
+  (userId && owner_id && userId === owner_id);
 
   const handleDelete = async () => {
+    if(!user){
+      toast.error('Please Login To delete a house',{
+        duration:3000});
+        return;
+    }
+      
     if (window.confirm('Are you sure you want to delete this house?')) {
       try {
         const response = await deletePropertyById(id);

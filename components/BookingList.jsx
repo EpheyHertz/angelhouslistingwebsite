@@ -6,11 +6,13 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { cancelBookingById } from '@/app/server-action/booking-actions'
 import axios from 'axios'
+import { useRouter } from 'next/navigation'
 
 export function BookingList() {
   const [bookings, setBookings] = useState([])
   const [cancelling, setCancelling] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const router =useRouter()
   const fetchBookings = async () => {
     try {
       const response = await axios.get('/apis/bookings/userBookings')
@@ -103,7 +105,7 @@ export function BookingList() {
               <div className="flex items-center">
                 <DollarSignIcon className="mr-2" size={16} />
                 <div className="flex flex-col">
-                  <p>Price per night:</p>
+                  <p>Price per Month:</p>
                   <p className="bg-slate-200 dark:bg-slate-700 p-2 rounded-lg text-slate-900 dark:text-slate-100">${booking.house.price}</p>
                 </div>
               </div>
@@ -117,6 +119,17 @@ export function BookingList() {
                 {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
               </span>
             </div>
+            <button
+            disabled={cancelling}
+            className={`mt-4 w-full
+              bg-blue-500 disabled:cursor-not-allowed
+              disabled:text-slate-400
+               text-white
+             font-bold py-2 px-4 rounded transition-colors duration-300 dark:text-white`}
+             onClick={()=>router.push(`/booking/${booking.id}`)}
+            >
+              View Booking
+            </button>
             {booking.status && (
               <button
                 disabled={cancelling || booking.status === 'canceled'}

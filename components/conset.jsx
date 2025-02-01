@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { submitAppeal } from '../app/server-action/booking-actions';
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -11,14 +13,12 @@ const itemVariants = {
 
 export default function ComplaintForm({ bookingId, houseTitle, house_id, user }) {
   const [formData, setFormData] = useState({
-    bookingId:bookingId ,
-    house_id:house_id,
-    name: '',
+    name: "",
     email: user.email,
-    message: '',
+    message: "",
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [responseMessage, setResponseMessage] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -27,26 +27,46 @@ export default function ComplaintForm({ bookingId, houseTitle, house_id, user })
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Ensure all fields have valid data
+    if (!formData.name.trim() || !formData.message.trim()) {
+      toast.error("Name and message are required.");
+      return;
+    }
+    if (!bookingId || !house_id) {
+      toast.error("Booking id and the house id are needed.");
+      return;
+    }
+    if (!formData.email) {
+      toast.error("Email is required to send the Appeal.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Simulate API request (replace with actual request)
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Send all required data
+      const response = await submitAppeal({
+        bookingId,  // Waiting for bookingId
+        house_id,   // Waiting for house_id
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+      });
 
-      setResponseMessage({
-        type: 'success',
-        text: 'Your complaint has been submitted successfully. We will get back to you shortly.',
-      });
-      setFormData({bookingId:bookingId,house_id:house_id,name: '', email: user.email, message: '' });
-    } catch (err) {
-      setResponseMessage({
-        type: 'error',
-        text: 'Failed to submit your complaint. Please try again later.',
-      });
+      if (response.success) {
+        toast.success("Your appeal has been submitted successfully!");
+        setFormData({ name: "", email: user.email, message: "" });
+      } else {
+        throw new Error(response.error || "Submission failed.");
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to submit your appeal. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   return (
     <div 
@@ -143,7 +163,10 @@ export default function ComplaintForm({ bookingId, houseTitle, house_id, user })
               >
                 <div className="flex items-center justify-center gap-2">
                   {isSubmitting ? (
+                    <>
                     <Loader2 className="h-5 w-5 animate-spin" />
+                    Submitting Appeal...
+                    </>
                   ) : (
                     <>
                       <Send className="h-5 w-5" />
@@ -154,27 +177,6 @@ export default function ComplaintForm({ bookingId, houseTitle, house_id, user })
               </motion.button>
             </motion.div>
           </form>
-
-          {/* Response Message */}
-          {responseMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`mt-6 p-4 rounded-xl border-l-4 ${
-                responseMessage.type === 'success' 
-                  ? 'bg-green-50/50 border-green-500 dark:bg-green-900/20' 
-                  : 'bg-red-50/50 border-red-500 dark:bg-red-900/20'
-              }`}
-            >
-              <p className={
-                responseMessage.type === 'success' 
-                  ? 'text-green-700 dark:text-green-300' 
-                  : 'text-red-700 dark:text-red-300'
-              }>
-                {responseMessage.text}
-              </p>
-            </motion.div>
-          )}
         </motion.div>
       </div>
     </div>

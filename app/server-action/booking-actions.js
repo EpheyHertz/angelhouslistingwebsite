@@ -1,6 +1,7 @@
 'use server'
 
 import { api } from '../lib/api/server';
+import  axios  from 'axios';
 
 // Fetch all bookings for the current user
 export async function getBookings() {
@@ -193,3 +194,41 @@ export const updateBooking = async (bookingId, status) => {
   if (!response.ok) throw new Error('Failed to update booking');
   return {'success':true,message:response.data};
 };
+
+
+
+export async function submitAppeal({ bookingId, house_id, name, email, message }) {
+  try {
+      // Ensure required fields are not empty before making the request
+      if (!bookingId || !house_id || !email || !message.trim()) {
+          throw new Error("All fields are required");
+      }
+
+      const response = await api.post("/houses/submit-appeal", {
+          bookingId,
+          house_id,
+          name,
+          email,
+          message,
+      });
+
+      if (response?.data?.success) {
+          return { success: true };
+      } else {
+          throw new Error(response?.data?.message || "Unexpected response from server");
+      }
+  } catch (error) {
+      // Handle different error cases
+      if (axios.isAxiosError(error)) {
+          return {
+              success: false,
+              error:
+                  error.response?.data?.detail ||
+                  error.response?.data?.message ||
+                  "A server error occurred. Please try again.",
+          };
+      } else {
+          return { success: false, error: error.message || "An unexpected error occurred." };
+      }
+  }
+}
