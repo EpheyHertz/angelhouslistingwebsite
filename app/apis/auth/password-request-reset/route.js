@@ -5,7 +5,7 @@ export async function POST(req) {
     const { email } = await req.json()
 
     const response = await api.post(`/users/password-reset`, {
-      body: JSON.stringify({ email }),
+      email 
     })
 
     if (response.status !==200) {

@@ -5,7 +5,7 @@ export async function POST(req) {
     const { token, new_password } = await req.json()
 
     const response = await api.post(`/users/password-reset/confirm?token=${token}`, {
-      body: JSON.stringify({ token, new_password }),
+     token, new_password 
     })
 
     if (!response.ok) {
