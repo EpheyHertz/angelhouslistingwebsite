@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { handleTokenFromRedirect } from '../utils/tokenManager';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ChatBubble from '@/components/ChatComponent';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const [mounted, setMounted] = useState(false);
@@ -29,6 +30,7 @@ function MyApp({ Component, pageProps }: AppProps) {
         <main className="flex-grow w-full max-w-full overflow-x-hidden">
           <Component {...pageProps} />
         </main>
+        
         <Footer />
       </div>
     </Provider>

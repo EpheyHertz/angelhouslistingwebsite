@@ -6,6 +6,7 @@ import Navbar from './Navbar'
 import Footer from './Footer'
 import { useTheme } from 'next-themes'
 import { Sun, Moon } from 'lucide-react'
+import ChatBubble from './ChatComponent'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -49,21 +50,25 @@ export default function Layout({
           {children}
         </div>
       </main>
-
+      
       <Footer />
 
-      <button
-        aria-label="Toggle Dark Mode"
-        type="button"
-        className="fixed z-10 bottom-5 right-5 bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 w-12 h-12 rounded-full flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors duration-200 shadow-lg hover:shadow-xl"
-        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-      >
-        {theme === 'dark' ? (
-          <Sun className="w-6 h-6" />
-        ) : (
-          <Moon className="w-6 h-6" />
-        )}
-      </button>
+{/* Chat Bubble Component */}
+<ChatBubble />
+
+{/* Theme Toggle */}
+{/* Theme Toggle */}
+<button
+  aria-label="Toggle Dark Mode"
+  type="button"
+  className="fixed bottom-10 right-20 z-[100] w-12 h-12 rounded-full flex items-center justify-center bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors duration-200 shadow-lg hover:shadow-xl"
+  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+>
+  {theme === 'dark' ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+</button>
+
+
+
     </div>
   )
 }
