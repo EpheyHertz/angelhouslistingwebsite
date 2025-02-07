@@ -61,7 +61,7 @@ export default function ChatBubble() {
     try {
       // Call your server action (real logic)
       const response = await chat({ message: messageContent });
-      
+
       // Disable the typing indicator once the API call is complete
       setIsTyping(false);
 
@@ -71,7 +71,6 @@ export default function ChatBubble() {
       }
 
       // Ensure that the bot's response is a string.
-      // If it's an object, extract the string (or stringify it)
       const botResponse =
         typeof response.response === 'string'
           ? response.response
@@ -103,12 +102,13 @@ export default function ChatBubble() {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50">
+    // Outer container: adjust positioning responsively.
+    <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
       {/* Chat Bubble Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 
-          bg-purple-600 hover:bg-purple-700 text-white
+        className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 
+          bg-gradient-to-r from-purple-500 to-purple-700 hover:scale-105 text-white
           ${isOpen ? 'scale-0' : 'scale-100'}`}
       >
         <span className="text-2xl animate-pulse">💬</span>
@@ -116,14 +116,14 @@ export default function ChatBubble() {
 
       {/* Chat Container */}
       <div
-        className={`absolute bottom-[calc(100%+1rem)] right-0 w-96 max-h-[70vh] rounded-2xl shadow-2xl transform transition-all duration-300 
+        className={`absolute bottom-[calc(100%+1rem)] right-0 w-full sm:w-96 max-h-[70vh] rounded-2xl shadow-lg transform transition-all duration-300 
           ${isOpen
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'}
-          bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800`}
+          bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800`}
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
           <h2 className="text-xl font-bold flex items-center gap-2 text-purple-600 dark:text-purple-400">
             <span className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">🤖</span>
             Ask Assistant
@@ -144,9 +144,9 @@ export default function ChatBubble() {
               className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-4 ${
-                  message.isUser
-                    ? 'bg-purple-600 text-white'
+                className={`max-w-[85%] rounded-2xl p-4 transition-all duration-200 ${
+                  message.isUser 
+                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
                     : 'bg-white dark:bg-gray-800 shadow-md'
                 }`}
               >
@@ -181,7 +181,7 @@ export default function ChatBubble() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <div className="relative">
             <textarea
               ref={textareaRef}
@@ -208,7 +208,8 @@ export default function ChatBubble() {
                 ${inputValue
                   ? 'text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300'
                   : 'text-gray-400'} 
-                hover:bg-gray-100 dark:hover:bg-gray-700`}
+                hover:bg-gray-100 dark:hover:bg-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                disabled={isTyping}
             >
               <ArrowUpCircle className="w-6 h-6" strokeWidth={2} />
             </button>
