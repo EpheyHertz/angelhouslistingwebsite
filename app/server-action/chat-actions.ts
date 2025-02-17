@@ -1,9 +1,9 @@
 'use server';
-import { api } from '../lib/api/server';
+import axios from 'axios';
 
 export default async function chat({ message }: { message: string }) {
   try {
-    const response = await api.post('/chat/us', { message });
+    const response = await axios.post('https://comradehomeschatbot.onrender.com/chat/us', { message });
     if (response.status !== 200) {
       throw new Error('Error');
     }

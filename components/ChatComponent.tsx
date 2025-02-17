@@ -3,6 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowUpCircle, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeExternalLinks from 'rehype-external-links';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { materialOceanic } from 'react-syntax-highlighter/dist/esm/styles/prism';
+
+
+
 import chat from '@/app/server-action/chat-actions';
 import toast from 'react-hot-toast';
 
@@ -21,7 +28,6 @@ export default function ChatBubble() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize the textarea based on its content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -32,7 +38,6 @@ export default function ChatBubble() {
     }
   }, [inputValue]);
 
-  // Scroll to the latest message whenever messages or typing indicator updates
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
@@ -41,7 +46,6 @@ export default function ChatBubble() {
     const messageContent = content || inputValue.trim();
     if (!messageContent) return;
 
-    // Add the user's message to the conversation history
     setMessages((prev) => [
       ...prev,
       {
@@ -52,17 +56,11 @@ export default function ChatBubble() {
       },
     ]);
 
-    // Clear the input immediately
     setInputValue('');
-
-    // Set the typing indicator while the actual API call is pending
     setIsTyping(true);
 
     try {
-      // Call your server action (real logic)
       const response = await chat({ message: messageContent });
-
-      // Disable the typing indicator once the API call is complete
       setIsTyping(false);
 
       if (!response.success) {
@@ -70,13 +68,11 @@ export default function ChatBubble() {
         return;
       }
 
-      // Ensure that the bot's response is a string.
       const botResponse =
         typeof response.response === 'string'
           ? response.response
           : JSON.stringify(response.response);
 
-      // Add the bot's response to the conversation history
       setMessages((prev) => [
         ...prev,
         {
@@ -101,61 +97,103 @@ export default function ChatBubble() {
     }
   };
 
+  const MarkdownComponents = {
+    code({ node, inline, className, children, ...props }: any) {
+      const match = /language-(\w+)/.exec(className || '');
+      return !inline && match ? (
+        <SyntaxHighlighter
+          style={materialOceanic}
+          language={match[1]}
+          PreTag="div"
+          className="rounded-lg p-4 my-2"
+          {...props}
+        >
+          {String(children).replace(/\n$/, '')}
+        </SyntaxHighlighter>
+      ) : (
+        <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md" {...props}>
+          {children}
+        </code>
+      );
+    },
+    img({ src, alt }: { src?: string; alt?: string }) {
+      return (
+        <img 
+          src={src} 
+          alt={alt} 
+          className="max-w-full h-auto rounded-lg border border-gray-200 dark:border-gray-700 my-2"
+          loading="lazy"
+        />
+      );
+    },
+    a({ href, children }: { href?: string; children?: React.ReactNode }) {
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-purple-600 dark:text-purple-400 hover:underline"
+        >
+          {children}
+        </a>
+      );
+    },
+  };
+
   return (
-    // Outer container: adjust positioning responsively.
     <div className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
-      {/* Chat Bubble Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 
-          bg-gradient-to-r from-purple-500 to-purple-700 hover:scale-105 text-white
-          ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 
+          bg-gradient-to-br from-purple-600 via-blue-500 to-indigo-600 hover:scale-110 text-white
+          ${isOpen ? 'scale-0' : 'scale-100'} backdrop-blur-lg`}
       >
-        <span className="text-2xl animate-pulse">💬</span>
+        <span className="text-2xl animate-pulse">✨</span>
       </button>
 
-      {/* Chat Container */}
       <div
-        className={`absolute bottom-[calc(100%+1rem)] right-0 w-full sm:w-96 max-h-[70vh] rounded-2xl shadow-lg transform transition-all duration-300 
+        className={`absolute bottom-[calc(100%+1rem)] right-0 w-[90vw] max-w-lg max-h-[80vh] rounded-2xl shadow-2xl transform transition-all duration-300
           ${isOpen
             ? 'opacity-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 translate-y-4 pointer-events-none'}
-          bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800`}
+          bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 backdrop-blur-lg`}
       >
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-          <h2 className="text-xl font-bold flex items-center gap-2 text-purple-600 dark:text-purple-400">
-            <span className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">🤖</span>
-            Ask Assistant
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-purple-600 to-blue-500">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+            <span className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">🚀</span>
+            AI Assistant
           </h2>
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
-        {/* Messages Container */}
-        <div className="p-4 h-[400px] overflow-y-auto space-y-6 bg-gray-50 dark:bg-gray-950">
+        <div className="p-4 h-[500px] overflow-y-auto space-y-4 bg-gradient-to-b from-white/50 to-gray-50/50 dark:from-gray-900/50 dark:to-gray-950/50">
           {messages.map((message) => (
             <div
               key={message.id}
               className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[85%] rounded-2xl p-4 transition-all duration-200 ${
-                  message.isUser 
-                    ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white'
-                    : 'bg-white dark:bg-gray-800 shadow-md'
-                }`}
+                className={`max-w-[90%] rounded-2xl p-4 transition-all duration-200 shadow-sm
+                  ${message.isUser 
+                    ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white'
+                    : 'bg-white dark:bg-gray-800 shadow-md'}`}
               >
                 {message.type === 'text' && (
                   <>
                     {message.isUser ? (
                       <p className="break-words text-white">{message.content}</p>
                     ) : (
-                      <ReactMarkdown className="break-words text-gray-800 dark:text-gray-100">
+                      <ReactMarkdown
+                        className="prose dark:prose-invert max-w-none"
+                        remarkPlugins={[remarkGfm]}
+                        rehypePlugins={[[rehypeExternalLinks, { target: '_blank' }]]}
+                        components={MarkdownComponents}
+                      >
                         {message.content}
                       </ReactMarkdown>
                     )}
@@ -168,10 +206,9 @@ export default function ChatBubble() {
           {isTyping && (
             <div className="flex justify-start">
               <div className="max-w-[85%] rounded-2xl p-4 bg-white dark:bg-gray-800 shadow-md">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce"></div>
-                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 rounded-full bg-purple-400 animate-bounce delay-200"></div>
+                <div className="flex space-x-2 items-center">
+                  <div className="dot-flashing"></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300">Thinking...</span>
                 </div>
               </div>
             </div>
@@ -180,8 +217,7 @@ export default function ChatBubble() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
           <div className="relative">
             <textarea
               ref={textareaRef}
@@ -198,7 +234,7 @@ export default function ChatBubble() {
                 bg-white dark:bg-gray-800 text-gray-900 dark:text-white
                 placeholder-gray-400 dark:placeholder-gray-500
                 border border-gray-200 dark:border-gray-700
-                transition-all duration-200 scrollbar-hide"
+                transition-all duration-200 scrollbar-hide focus:ring-2 focus:ring-purple-500"
               rows={1}
               style={{ minHeight: '56px' }}
             />
@@ -209,7 +245,7 @@ export default function ChatBubble() {
                   ? 'text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300'
                   : 'text-gray-400'} 
                 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:bg-gray-100 disabled:cursor-not-allowed`}
-                disabled={isTyping}
+              disabled={isTyping}
             >
               <ArrowUpCircle className="w-6 h-6" strokeWidth={2} />
             </button>

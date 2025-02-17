@@ -57,7 +57,6 @@ export default function Layout({
 <ChatBubble />
 
 {/* Theme Toggle */}
-{/* Theme Toggle */}
 <button
   aria-label="Toggle Dark Mode"
   type="button"
