@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url><loc>https://www.comradehomes.me/about</loc><lastmod>2025-03-01T21:41:27.100Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/password-reset-confirmation</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/password-reset-request</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/login</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/oauth</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/password-reset</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/verify-email</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/blog</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/auth/signup</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/booking</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/careers</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/cart-page</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/blog/add-blog</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/contact</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/booking/user-management-bookings</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/houses/new</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/dashboard</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/houses</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/privacy&amp;policy</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/profile/update</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+<url><loc>https://www.comradehomes.me/terms</loc><lastmod>2025-03-01T21:41:27.102Z</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+</urlset>

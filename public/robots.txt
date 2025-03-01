@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.comradehomes.me/
+
+# Sitemaps
+Sitemap: https://www.comradehomes.me/sitemap.xml
