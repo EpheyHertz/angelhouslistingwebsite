@@ -84,8 +84,8 @@ const SignupForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous error
-
+    setError(''); // Clear previous errors
+  
     // Validate required fields
     const requiredFields = [
       'username',
@@ -107,29 +107,48 @@ const SignupForm = () => {
         return;
       }
     }
-
+  
     // Validate password match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
-
+  
     setIsLoading(true);
+  
     try {
       const response = await axios.post('/apis/auth/signup', formData);
-      if (response.status !== 201) {
-        setError(response.data.message || 'An error occurred. Please try again.');
+  
+      if (response.status === 201) {
         setIsLoading(false);
+        router.push('/auth/login'); // Redirect on success
       } else {
         setIsLoading(false);
-        router.push('/auth/login');
+        setError(response.data.message || 'An unexpected error occurred.');
       }
     } catch (error) {
-      setError('An error occurred!');
       setIsLoading(false);
+      
+      // Handle specific HTTP errors
+      if (error.response) {
+        const status = error.response.status;
+        let errorMessage = 'An unexpected error occurred.';
+  
+        if (status === 400) {
+          errorMessage = 'Invalid request. Please check your inputs.';
+        } else if (status === 422) {
+          errorMessage = 'Validation failed. Please ensure all fields are correct.';
+        } else if (status === 500) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+  
+        setError(errorMessage);
+      } else {
+        setError('Network error. Please check your connection.');
+      }
     }
   };
-
+  
   const nextStep = () => setStep((prev) => Math.min(prev + 1, 2));
   const prevStep = () => setStep((prev) => Math.max(prev - 1, 1));
 
@@ -166,7 +185,7 @@ const SignupForm = () => {
           className="relative z-10 w-full max-w-2xl bg-white/95 dark:bg-gray-800/95 backdrop-blur-lg rounded-2xl shadow-2xl overflow-hidden"
         >
           <div className="p-8">
-          {error?<h1 className='text-red-700 text-4xl'>{error}</h1>:''}
+          
             {/* Progress Steps */}
             <div className="flex justify-center mb-8 space-x-4">
               {[1, 2].map((s) => (

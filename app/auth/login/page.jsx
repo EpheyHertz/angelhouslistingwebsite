@@ -35,38 +35,49 @@ export default function Login() {
   }, [])
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+  
     try {
-      // Here you would typically send a request to your API
-      setLoading(true)
       const response = await fetch('/apis/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-      })
-
+      });
+  
+      const data = await response.json(); // Parse response once
+  
       if (response.ok) {
-        const data = await response.json()
         dispatch(
           login({
             access_token: data.token.access_token,
             refresh_token: data.token.refresh_token,
             user: data.user,
           })
-        )
-        setLoading(false)
-        router.push('/dashboard')
+        );
+        setLoading(false);
+        router.push('/dashboard');
       } else {
-        setLoading(false)
-        setError('Invalid email or password')
+        // Handle specific HTTP errors
+        let errorMessage = 'An error occurred. Please try again.';
+        if (response.status === 400) {
+          errorMessage = response.errorMessage||'Invalid email or password. Please check your credentials.';
+        } else if (response.status === 403) {
+          errorMessage = response.errorMessage||'Please authorize your account to proceed.Ensure you have verified your email address.';
+        } else if (data?.error) {
+          errorMessage = data.error; // API may return an error message
+        }
+  
+        setLoading(false);
+        setError(errorMessage);
       }
     } catch (err) {
-      setLoading(false)
-      setError('An error occurred. Please try again.')
+      setLoading(false);
+      setError('Network error. Please try again later.');
     }
-  }
+  };
+  
   const handleSocialLogin = (provider) => {
     // Social login logic
   }

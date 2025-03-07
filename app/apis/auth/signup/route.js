@@ -117,8 +117,7 @@ export async function POST(req) {
     // Send the user data to your backend using axios
     // const backendUrl = process.env.BACKEND_API_URL || 'http://127.0.0.1:8000/users/register';
     const response = await api.post('/users/register', userData);
-    console.log(response)
-
+   
     // If the user was successfully created in the backend, respond with the success message
     if (response.status === 201) {
       return new Response(
