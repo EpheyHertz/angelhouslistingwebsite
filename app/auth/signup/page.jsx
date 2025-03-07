@@ -7,6 +7,7 @@ import { Eye, EyeOff, ArrowRight, ArrowLeft, Loader, Upload, User, Mail, Lock, H
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import axios from 'axios'
+import { BASE_URL } from '@/utils/config'
 
 
 const backgroundImages = [
@@ -475,7 +476,7 @@ const SignupForm = () => {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 className="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg flex items-center justify-center gap-2 transition-transform"
-                onClick={() => window.location.href = 'https://angelhouslistingbackendapis.onrender.com/auth/google'}
+                onClick={() => window.location.href = `${BASE_URL}auth/google`}
                 disabled={isLoading}
               >
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">

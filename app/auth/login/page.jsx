@@ -8,7 +8,9 @@ import { login } from  '../../../store/authSlice'
 import Layout from '../../../components/Layout'
 import { Loader, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
+import { BASE_URL } from '@/utils/config'
 import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
 
 const backgroundImages = [
   'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
@@ -79,7 +81,9 @@ export default function Login() {
   };
   
   const handleSocialLogin = (provider) => {
-    // Social login logic
+    toast.success(`${provider} login is not available at the moment.`,
+      { duration: 3000 }
+    );
   }
 
   return (
@@ -224,7 +228,7 @@ export default function Login() {
                 GitHub
               </button>
               <Link
-                href="https://angelhouslistingbackendapis.onrender.com/auth/google"
+                href={`${BASE_URL}auth/google`}
                 className="flex items-center justify-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-300"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
