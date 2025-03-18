@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { Home, Users, BookOpen, Mail, Sun, Moon, PlusCircle, Search, Settings } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { Button } from '@/components/ui/Button'
+import { Button } from './components/ui/Button'
 
 export default function Sidebar() {
   const { theme, setTheme } = useTheme()

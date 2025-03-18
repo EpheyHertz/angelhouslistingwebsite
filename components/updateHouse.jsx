@@ -7,6 +7,7 @@ const EditHouseDetails = ({ house, handleUpdateHouse, setIsEditing,updateError }
     title: house.title,
     location: house.location,
     price: house.price,
+    deposit: house.deposit,
     description: house.description,
     images: house.images || [],
     amenities: house.amenities || "",
@@ -66,6 +67,7 @@ const EditHouseDetails = ({ house, handleUpdateHouse, setIsEditing,updateError }
     updatedData.append("title", formData.title);
     updatedData.append("location", formData.location);
     updatedData.append("price", formData.price);
+    updatedData.append("deposit", formData.deposit);
     updatedData.append("description", formData.description);
     updatedData.append("amenities", formData.amenities);
     updatedData.append("room_count", formData.room_no);
@@ -112,6 +114,14 @@ const EditHouseDetails = ({ house, handleUpdateHouse, setIsEditing,updateError }
             name="price"
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+            className="w-full px-3 py-2 mb-3 text-gray-700 border rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
+            required
+          />
+          <input
+            type="number"
+            name="deposit"
+            value={formData.deposit}
+            onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
             className="w-full px-3 py-2 mb-3 text-gray-700 border rounded-lg focus:outline-none dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
             required
           />

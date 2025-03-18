@@ -71,7 +71,7 @@ export default function Dashboard() {
       case 'regular_user':
         return <UserDashboard activeTab={activeTab} user={user} />;
       case 'house_owner':
-        return <HouseOwnerDashboard activeTab={activeTab} />;
+        return <HouseOwnerDashboard activeTab={activeTab} user={user} />;
       case 'admin':
         return <AdminDashboard activeTab={activeTab} />;
       default:

@@ -80,7 +80,7 @@ export const fetchBookingById = async (bookingId) => {
 };
 
 export const fetchUserHousesBookings = async () => {
-  const response = await api.get(`/houses/user/house-bookings`);
+  const response = await api.get(`/houses/user/bookings`);
   if (response.status == 404) return {'success':true,'data':[]};
   if (response.status !== 200) throw new Error('Failed to fetch booking');
   return  {'success':true,'data':response.data};

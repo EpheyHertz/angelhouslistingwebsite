@@ -30,6 +30,7 @@ export default function OAuth() {
   const authenticateUser = async () => {
     const access_token = searchParams.get('access_token');
     const refresh_token = searchParams.get('refresh_token');
+    const expires_in = searchParams.get('expires_in');
 
     if (!access_token || !refresh_token) {
       setError('Missing authentication credentials');
@@ -44,7 +45,21 @@ export default function OAuth() {
       if (!response.ok) throw new Error('Authentication failed');
 
       const user = await response.json();
-      dispatch(login({ access_token, refresh_token, user }));
+      const tokenExpiry = expires_in 
+        ? Math.floor(Date.now() / 1000) + expires_in
+        : Math.floor(Date.now() / 1000) + 1450; // Default to ~24 minutes
+      
+      // Store token refresh timestamp
+      const tokenRefreshedAt = Math.floor(Date.now() / 1000);
+      dispatch(
+        login({
+          access_token: data.token.access_token,
+          refresh_token: data.token.refresh_token,
+          user: data.user,
+          token_expiry: tokenExpiry.toString(),
+          token_refreshed_at: tokenRefreshedAt.toString()
+        })
+      );
       router.push('/dashboard');
     } catch (err) {
       console.error('Authentication error:', err);

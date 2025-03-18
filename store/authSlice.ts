@@ -26,8 +26,9 @@ interface AuthState {
   } | null
   accessToken: string | null
   refreshToken: string | null
+  token_expiry: string | null
+  token_refreshed_at: string | null
 }
-
 const storeInCookies = (key: string, value: string) => {
   Cookies.set(key, value, { secure: true, sameSite: 'strict', expires: 7 }) // 7-day expiry
 }
@@ -43,6 +44,8 @@ const initialState: AuthState = {
   user: getFromCookies('user') ? JSON.parse(getFromCookies('user')!) : null,
   accessToken: getFromCookies('access_token'),
   refreshToken: getFromCookies('refresh_token'),
+  token_expiry: getFromCookies('token_expiry'),
+ token_refreshed_at:getFromCookies('token_refreshed_at')
 }
 
 const authSlice = createSlice({
@@ -54,23 +57,31 @@ const authSlice = createSlice({
       action: PayloadAction<{
         access_token: string
         refresh_token: string
+        token_expiry: string
+        token_refreshed_at: string
         user: AuthState['user']
       }>
     ) => {
       state.isAuthenticated = true
       state.accessToken = action.payload.access_token
       state.refreshToken = action.payload.refresh_token
+      state.token_expiry = action.payload.token_expiry
+      state.token_refreshed_at = action.payload.token_refreshed_at
       state.user = action.payload.user
 
       // Store in cookies
       storeInCookies('access_token', action.payload.access_token)
       storeInCookies('refresh_token', action.payload.refresh_token)
+      storeInCookies('token_refreshed_at', action.payload.token_refreshed_at)
+      storeInCookies('token_expiry', action.payload.token_expiry)
       storeInCookies('user', JSON.stringify(action.payload.user))
     },
     logout: (state) => {
       // Remove cookies with the same attributes as set
       Cookies.remove('access_token', { secure: true, sameSite: 'strict' })
       Cookies.remove('refresh_token', { secure: true, sameSite: 'strict' })
+      Cookies.remove('token_expiry', { secure: true, sameSite: 'strict' })
+      Cookies.remove('token_refreshed_at', { secure: true, sameSite: 'strict' })
       Cookies.remove('user', { secure: true, sameSite: 'strict' })
     
       // Reset Redux state
@@ -78,6 +89,8 @@ const authSlice = createSlice({
       state.user = null
       state.accessToken = null
       state.refreshToken = null
+      state.token_expiry = null
+      state.token_refreshed_at = null
     }
   },
 })

@@ -40,37 +40,79 @@ export default function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-  
+    
     try {
       const response = await fetch('/apis/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-  
+      
       const data = await response.json(); // Parse response once
-  
+      
       if (response.ok) {
+        // Get token expiry information if available
+        const tokenExpiry = data.token.expires_in 
+          ? Math.floor(Date.now() / 1000) + data.token.expires_in
+          : Math.floor(Date.now() / 1000) + 1450; // Default to ~24 minutes
+        
+        // Store token refresh timestamp
+        const tokenRefreshedAt = Math.floor(Date.now() / 1000);
+        
+        // Dispatch login action with all token data
         dispatch(
           login({
             access_token: data.token.access_token,
             refresh_token: data.token.refresh_token,
             user: data.user,
+            token_expiry: tokenExpiry.toString(),
+            token_refreshed_at: tokenRefreshedAt.toString()
           })
         );
+        
         setLoading(false);
-        router.push('/dashboard');
+        
+        const urlParams = new URLSearchParams(window.location.search);
+      let redirectUrl = urlParams.get('redirect');
+      
+      // Properly decode the URL if it exists
+      if (redirectUrl) {
+        try {
+          // Decode the URL - it might be URL encoded multiple times
+          redirectUrl = decodeURIComponent(redirectUrl);
+          
+          // Extract just the path part if it's a full URL
+          if (redirectUrl.includes('://')) {
+            const url = new URL(redirectUrl);
+            redirectUrl = url.pathname + url.search;
+          }
+          
+          // Safety check to prevent redirect loops
+          if (!redirectUrl.startsWith('/auth/')) {
+            console.log('Redirecting to:', redirectUrl);
+            router.push(redirectUrl);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing redirect URL:', error);
+          // If there's an error parsing the URL, fall back to dashboard
+        }
+      }
+      
+      // Default to dashboard if no valid redirect URL
+      router.push('/dashboard');
       } else {
         // Handle specific HTTP errors
         let errorMessage = 'An error occurred. Please try again.';
+        
         if (response.status === 400) {
-          errorMessage = response.errorMessage||'Invalid email or password. Please check your credentials.';
+          errorMessage = data.errorMessage || 'Invalid email or password. Please check your credentials.';
         } else if (response.status === 403) {
-          errorMessage = response.errorMessage||'Please authorize your account to proceed.Ensure you have verified your email address.';
+          errorMessage = data.errorMessage || 'Please authorize your account to proceed. Ensure you have verified your email address.';
         } else if (data?.error) {
           errorMessage = data.error; // API may return an error message
         }
-  
+        
         setLoading(false);
         setError(errorMessage);
       }

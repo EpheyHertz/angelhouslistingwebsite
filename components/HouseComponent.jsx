@@ -21,7 +21,10 @@ import {
   Loader2,
   User,
   Mail,
-  Phone
+  Phone,
+  CheckCircle,
+  CreditCard,
+  Shield
 } from 'lucide-react'
 import { api } from '@/app/lib/api/client'
 import { addReview, getReviews } from '../app/server-action/review-actions'
@@ -30,7 +33,10 @@ import { useAuth } from '../hooks/hooks'
 import EditHouseDetails from './updateHouse'
 import { updateUserHousesById } from '../app/server-action/house_actions'
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api'
+import ShareHouse from './ShareHouse'
+import LinkDetails from './Links'
 import axios from 'axios'
+import HousePriceActions from './HousePrice'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -66,6 +72,7 @@ export default function HouseDetails({id}) {
   const [updateError, setUpdateError] = useState(null)
   const [addingReview, setAddingReview] = useState(false)
   const [map, setMap] = useState(null)
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     const fetchHouse = async () => {
@@ -86,18 +93,18 @@ export default function HouseDetails({id}) {
     fetchHouse()
   }, [id])
     
-    // Handle editing a comment
-    const handleEdit = (commentId) => {
-      const comment = comments.find((c) => c.id === commentId);
-      setNewComment(comment.content);
-      setNewRating(comment.rating);
-      // Optionally, implement logic to switch to an edit form
-    };
-  
-    // Handle deleting a comment
-    const handleDelete = (commentId) => {
-      setComments(comments.filter((comment) => comment.id !== commentId));
-    };
+  // Handle editing a comment
+  const handleEdit = (commentId) => {
+    const comment = comments.find((c) => c.id === commentId);
+    setNewComment(comment.content);
+    setNewRating(comment.rating);
+    // Optionally, implement logic to switch to an edit form
+  };
+
+  // Handle deleting a comment
+  const handleDelete = (commentId) => {
+    setComments(comments.filter((comment) => comment.id !== commentId));
+  };
 
   const handleLike = (commentId) => {
     setComments(
@@ -112,17 +119,11 @@ export default function HouseDetails({id}) {
   const handleUpdateHouse = async (updatedData, house_id) => {
     const response = await updateUserHousesById(updatedData, house_id)
     if(response.success){
-
       setIsEditing(false)
       alert('House updated Successfully')
-     
-    }else{
-      setUpdateError('An error occured while Updating the House!')
+    } else {
+      setUpdateError('An error occurred while updating the house!')
     }
-
-
-
-   
   }
 
   const handleCommentSubmit = async (e) => {
@@ -160,16 +161,14 @@ export default function HouseDetails({id}) {
 
   if (loading) {
     return (
-      
-        <div className="flex flex-col items-center justify-center min-h-screen">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <Loader2 className="h-12 w-12 text-blue-500" />
-          </motion.div>
-        </div>
-      
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <Loader2 className="h-12 w-12 text-blue-500" />
+        </motion.div>
+      </div>
     )
   }
 
@@ -177,275 +176,262 @@ export default function HouseDetails({id}) {
   if (!house) return <div className='text-2xl dark:text-white text-black'>House not found</div>
 
   return (
-    
+    <motion.div
+      className="max-w-7xl mx-auto px-4 py-8"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      {/* Header Section */}
+      <motion.div className="mb-8" variants={itemVariants}>
+        <motion.h1
+          className="text-4xl font-bold text-gray-900 dark:text-white mb-2"
+          initial={{ y: -20 }}
+          animate={{ y: 0 }}
+        >
+          {house.title}
+          {house.is_approved && (
+            <span className="ml-2 text-sm bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center w-fit mt-2">
+              <CheckCircle className="h-4 w-4 mr-1" />
+              Verified
+            </span>
+          )}
+        </motion.h1>
+        <motion.div
+          className="flex items-center text-lg text-gray-600 dark:text-gray-300"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <MapPin className="h-5 w-5 mr-1" />
+          {house.location}
+        </motion.div>
+      </motion.div>
+
+      {/* Image Carousel */}
       <motion.div
-        className="max-w-7xl mx-auto px-4 py-8"
-        initial="hidden"
-        animate="visible"
+        className="relative h-96 mb-8 rounded-2xl overflow-hidden"
+        variants={itemVariants}
+      >
+        <motion.div
+          key={currentImageIndex}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="relative h-full w-full"
+        >
+          <Image
+            src={house.images[currentImageIndex]}
+            alt={`${house.title} - Image ${currentImageIndex + 1}`}
+            fill
+            priority
+            className="object-cover"
+          />
+        </motion.div>
+
+        <motion.button
+          onClick={prevImage}
+          className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+          whileHover={{ scale: 1.1 }}
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </motion.button>
+        
+        <motion.button
+          onClick={nextImage}
+          className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+          whileHover={{ scale: 1.1 }}
+        >
+          <ChevronRight className="h-6 w-6" />
+        </motion.button>
+
+        <div className="absolute bottom-4 right-4 bg-black/75 text-white px-3 py-1 rounded-md text-sm">
+          {currentImageIndex + 1} / {house.images.length}
+        </div>
+      </motion.div>
+
+      {/* Price and Actions */}
+      <motion.div
+        className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4"
+        variants={itemVariants}
+      >
+        <HousePriceActions house={house} user={user} comments={comments} liked={liked} setIsEditing={setIsEditing} router={router} />
+      </motion.div>
+
+      {/* Deposit Section */}
+      <motion.div
+        className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg"
+        variants={itemVariants}
+      >
+
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <Shield className="h-6 w-6 mr-2 text-blue-500" />
+          Deposit & Payment
+        </h2>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <CreditCard className="h-5 w-5 text-blue-500" />
+            <span className="text-gray-600 dark:text-gray-300">Price: {house.currency || 'Kes'} {house.price}</span>
+            <span className="text-gray-600 dark:text-gray-300">Deposit: {house.currency || 'Kes'}{house.deposit || " 0"}</span>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300">
+            The deposit is required to secure this property. All prices are in Kes. The deposit is refundable if the property is left in good condition.
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Features Grid */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
         variants={containerVariants}
       >
-        {/* Header Section */}
-        <motion.div className="mb-8" variants={itemVariants}>
-          <motion.h1
-            className="text-4xl font-bold text-gray-900 dark:text-white mb-2"
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-          >
-            {house.title}
-          </motion.h1>
+        {[
+          { icon: Bed, title: 'Bedrooms', value: house.bedrooms },
+          { icon: Bath, title: 'Bathrooms', value: house.bathrooms },
+          { icon: Square, title: 'Area', value: `${house.area} sqft` }
+        ].map((feature, index) => (
           <motion.div
-            className="flex items-center text-lg text-gray-600 dark:text-gray-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            key={index}
+            className="flex items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+            variants={itemVariants}
+            whileHover={{ y: -5 }}
           >
-            <MapPin className="h-5 w-5 mr-1" />
-            {house.location}
+            <feature.icon className="h-8 w-8 text-blue-500 mr-4" />
+            <div>
+              <h3 className="font-semibold text-gray-900 dark:text-white">{feature.title}</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-xl">{feature.value}</p>
+            </div>
           </motion.div>
-        </motion.div>
+        ))}
+      </motion.div>
 
-        {/* Image Carousel */}
-        <motion.div
-          className="relative h-96 mb-8 rounded-2xl overflow-hidden"
-          variants={itemVariants}
-        >
-          <motion.div
-            key={currentImageIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="relative h-full w-full"
-          >
-            <Image
-              src={house.images[currentImageIndex]}
-              alt={`${house.title} - Image ${currentImageIndex + 1}`}
-              fill
-              priority
-              className="object-cover"
-            />
-          </motion.div>
+      {/* Description */}
+      <motion.div
+        className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg"
+        variants={itemVariants}
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Description</h2>
+        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{house.description}</p>
+      </motion.div>
+      <motion.div
+        className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg"
+        variants={itemVariants}
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Helpful links</h2>
+       <LinkDetails house={house}/>
+      </motion.div>
 
-          <motion.button
-            onClick={prevImage}
-            className="absolute top-1/2 left-4 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
-            whileHover={{ scale: 1.1 }}
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </motion.button>
-          
-          <motion.button
-            onClick={nextImage}
-            className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
-            whileHover={{ scale: 1.1 }}
-          >
-            <ChevronRight className="h-6 w-6" />
-          </motion.button>
-
-          <div className="absolute bottom-4 right-4 bg-black/75 text-white px-3 py-1 rounded-md text-sm">
-            {currentImageIndex + 1} / {house.images.length}
-          </div>
-        </motion.div>
-
-        {/* Price and Actions */}
-        <motion.div
-          className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4"
-          variants={itemVariants}
-        >
-          <motion.div
-            className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 260 }}
-          >
-            ${house.price.toLocaleString()}
-          </motion.div>
-
-          <div className="flex flex-wrap gap-2">
-            {[
-              {
-                icon: Heart,
-                count: house.likeCount + (liked ? 1 : 0),
-                action: () => setLiked(!liked),
-                active: liked
-              },
-              { icon: MessageCircle, count: comments.length },
-              { icon: Share2, label: 'Share' },
-              ...(user?.id === house.owner.id
-                ? [{ icon: Edit2, label: 'Edit', action: () => setIsEditing(true) }]
-                : []),
-              ...(user?.id !== house.owner.id
-                ? [{
-                    icon: Home,
-                    label: 'Book Now',
-                    action: () => router.push(`/booking/house-book/${house.id}`)
-                  }]
-                : [])
-            ].map((action, index) => (
-              <motion.button
-                key={index}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  action.active
-                    ? 'text-red-500 bg-red-50 dark:bg-red-900/20'
-                    : 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={action.action}
-              >
-                <action.icon className="h-5 w-5" />
-                {action.count && <span>{action.count}</span>}
-                {action.label && <span>{action.label}</span>}
-              </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Features Grid */}
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
-          variants={containerVariants}
-        >
-          {[
-            { icon: Bed, title: 'Bedrooms', value: house.bedrooms },
-            { icon: Bath, title: 'Bathrooms', value: house.bathrooms },
-            { icon: Square, title: 'Area', value: `${house.area} sqft` }
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              className="flex items-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow"
-              variants={itemVariants}
-              whileHover={{ y: -5 }}
+      {/* Google Map */}
+      <motion.div
+        className="mb-8"
+        variants={itemVariants}
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+          <MapPin className="h-6 w-6 mr-2 text-red-500" />
+          Location
+        </h2>
+        
+        {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
+          <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
+            <GoogleMap
+              mapContainerStyle={mapContainerStyle}
+              center={{ lat: house.latitude, lng: house.longitude }}
+              zoom={14}
+              options={{
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false
+              }}
             >
-              <feature.icon className="h-8 w-8 text-blue-500 mr-4" />
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 text-xl">{feature.value}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Description */}
-        <motion.div
-          className="mb-8 p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Description</h2>
-          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{house.description}</p>
-        </motion.div>
-
-        {/* Google Map */}
-        <motion.div
-          className="mb-8"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <MapPin className="h-6 w-6 mr-2 text-red-500" />
-            Location
-          </h2>
-          
-          {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? (
-            <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={{ lat: house.latitude, lng: house.longitude }}
-                zoom={14}
-                options={{
-                  streetViewControl: false,
-                  mapTypeControl: false,
-                  fullscreenControl: false
-                }}
-              >
-                <Marker position={{ lat: house.latitude, lng: house.longitude }} />
-              </GoogleMap>
-            </LoadScript>
-          ) : (
-            <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-              <div className="space-y-3 text-gray-600 dark:text-gray-300">
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-blue-500" />
-                  {house.location}
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-sm font-mono">Lat:</span>
-                  {house.latitude}
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-sm font-mono">Lng:</span>
-                  {house.longitude}
-                </p>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* Amenities */}
-        <motion.div
-          className="mb-8"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Amenities</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {house.amenities.map((amenity, index) => (
-              <motion.div
-                key={index}
-                className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md flex items-center"
-                whileHover={{ scale: 1.02 }}
-              >
-                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2" />
-                <span className="text-gray-600 dark:text-gray-300">{amenity}</span>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Contact Owner */}
-        <motion.div
-          className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Contact Owner</h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-blue-500" />
-              <span className="text-gray-600 dark:text-gray-300">{house.owner.name}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-blue-500" />
-              <span className="text-gray-600 dark:text-gray-300">{house.owner.email}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-blue-500" />
-              <span className="text-gray-600 dark:text-gray-300">{house.owner.phone}</span>
+              <Marker position={{ lat: house.latitude, lng: house.longitude }} />
+            </GoogleMap>
+          </LoadScript>
+        ) : (
+          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+            <div className="space-y-3 text-gray-600 dark:text-gray-300">
+              <p className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-blue-500" />
+                {house.location}
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="text-sm font-mono">Lat:</span>
+                {house.latitude}
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="text-sm font-mono">Lng:</span>
+                {house.longitude}
+              </p>
             </div>
           </div>
-        </motion.div>
-
-        {/* Reviews Section */}
-        <motion.div variants={itemVariants}>
-          <ReviewsAndComments
-            comments={comments}
-            user={user}
-            handleCommentSubmit={handleCommentSubmit}
-            handleLike={handleLike}
-            handleEdit={handleEdit}
-            handleDelete={handleDelete}
-            newComment={newComment}
-            setNewComment={setNewComment}
-            newRating={newRating}
-            setNewRating={setNewRating}
-            addingReview={addingReview}
-          />
-        </motion.div>
-
-        {isEditing && (
-          <EditHouseDetails
-            house={house}
-            setIsEditing={setIsEditing}
-            handleUpdateHouse={handleUpdateHouse}
-            updateError={updateError}
-          />
         )}
       </motion.div>
-   
+
+      {/* Amenities */}
+      <motion.div
+        className="mb-8"
+        variants={itemVariants}
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Amenities</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {house.amenities.map((amenity, index) => (
+            <motion.div
+              key={index}
+              className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md flex items-center"
+              whileHover={{ scale: 1.02 }}
+            >
+              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2" />
+              <span className="text-gray-600 dark:text-gray-300">{amenity}</span>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Contact Owner */}
+      <motion.div
+        className="mb-8 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg"
+        variants={itemVariants}
+      >
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Contact Owner</h2>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <User className="h-5 w-5 text-blue-500" />
+            <span className="text-gray-600 dark:text-gray-300">{house.owner.name}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Mail className="h-5 w-5 text-blue-500" />
+            <span className="text-gray-600 dark:text-gray-300">{house.owner.email}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 text-blue-500" />
+            <span className="text-gray-600 dark:text-gray-300">{house.owner.phone}</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Reviews Section */}
+      <motion.div variants={itemVariants}>
+        <ReviewsAndComments
+          comments={comments}
+          user={user}
+          handleCommentSubmit={handleCommentSubmit}
+          handleLike={handleLike}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+          newComment={newComment}
+          setNewComment={setNewComment}
+          newRating={newRating}
+          setNewRating={setNewRating}
+          addingReview={addingReview}
+        />
+      </motion.div>
+
+      {isEditing && (
+        <EditHouseDetails
+          house={house}
+          setIsEditing={setIsEditing}
+          handleUpdateHouse={handleUpdateHouse}
+          updateError={updateError}
+        />
+      )}
+    </motion.div>
   )
 }

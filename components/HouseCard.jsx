@@ -21,6 +21,7 @@ export default function HouseCard({
   room_count,
   likeCount,
   bedrooms,
+  currency,
   bathrooms,
   owner_id,
   userId,
@@ -101,7 +102,7 @@ export default function HouseCard({
 
         <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">{location}</p>
         <div className="flex justify-between items-center mb-2">
-          <span className="text-lg font-bold text-blue-600 dark:text-blue-400">${price}</span>
+          <span className="text-lg font-bold text-blue-600 dark:text-blue-400">{currency || 'KES'} {price}</span>
           <div className="flex items-center gap-4">
             <div className="flex items-center">
               <Heart className="h-5 w-5 text-red-500 mr-1" />
