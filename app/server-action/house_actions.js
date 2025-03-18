@@ -146,63 +146,61 @@ export async function updateUserHousesById(updateData, house_id) {
     }
   }
 }
+
 export async function addUserHouse(houseData) {
-  // Validate input parameters
+  // Ensure houseData is provided
   if (!houseData) {
-    throw new Error("Update data cannot be empty");
+    throw new Error("House data cannot be empty");
   }
 
   try {
-   
+    // console.log("Submitting house data:", houseData); // Debugging log
 
-    // Process data to ensure numerical values
     const response = await api.post(`/houses/`, houseData);
 
+    // Check if the response status is not 201 (Created)
     if (response.status !== 201) {
-      throw new Error(`Failed to add House. Status code: ${response.status}`);
+      throw new Error(`Failed to add house. Status: ${response.status}`);
     }
 
-    if (!response.data) {
-      throw new Error("Empty response from server");
+    // Ensure the response contains data
+    if (!response.data || !response.data.house) {
+      throw new Error("Invalid or empty response from server.");
     }
 
-   
     return {
       success: true,
       data: response.data.house,
       message: response.data.message || "House created successfully",
+      status: 201,
     };
 
   } catch (error) {
-   
+    console.error("Error in addUserHouse:", error); // Debugging log
 
-    // Enhanced error handling for numerical conversion
-    if (error.message.includes("invalid number") || error.message.includes("numeric value")) {
-      return {
-        success: false,
-        message: "Invalid numerical value in form data",
-        status: 400
-      };
-    }
-
-    // Handle Axios-specific errors
+    // Check for Axios response error (server error)
     if (error.response) {
-      const serverMessage = error.response.data?.detail || error.response.statusText;
       return {
         success: false,
-        message: `Server error: ${serverMessage}`,
+        message: error.response.data?.detail || `Server error: ${error.response.statusText}`,
         status: error.response.status,
       };
-    } else if (error.request) {
+    }
+
+    // Handle network errors
+    if (error.request) {
       return {
         success: false,
-        message: "No response from server. Please check your network connection.",
-      };
-    } else {
-      return {
-        success: false,
-        message: error.message || "Failed to create house",
+        message: "No response from server. Please check your internet connection.",
+        status: 503, // Service Unavailable
       };
     }
+
+    // Handle unexpected errors
+    return {
+      success: false,
+      message: error.message || "An unknown error occurred",
+      status: 500, // Internal Server Error
+    };
   }
 }
