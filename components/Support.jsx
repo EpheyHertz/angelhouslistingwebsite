@@ -1,10 +1,13 @@
-'use client'
+'use client';
+
 import { useState } from 'react';
 import StripeTokenCheckout from './stripe';
 import MPesaPayment from './Mpesa';
-import { CreditCard, Phone, HelpCircle, AlertCircle, CheckCircle, Edit2 } from 'lucide-react';
+import PayPalTokenCheckout from './Paypal';
+import useExchangeRate from '../hooks/useExchangeRate';
+import { CreditCard, Phone, HelpCircle, AlertCircle, CheckCircle, Edit2, PlaySquare } from 'lucide-react';
 
-// Custom UI components to replace the imported ones
+// Custom UI components
 const Card = ({ children, className = "" }) => (
   <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md ${className}`}>
     {children}
@@ -35,8 +38,7 @@ const CardContent = ({ children, className = "" }) => (
   </div>
 );
 
-// Fixed custom Tabs components using React state
-const Tabs = ({ children, value, onValueChange, className = "" }) => (
+const Tabs = ({ children, className = "" }) => (
   <div className={`${className}`}>
     {children}
   </div>
@@ -50,7 +52,6 @@ const TabsList = ({ children, className = "" }) => (
 
 const TabsTrigger = ({ children, value, activeValue, onSelect, className = "" }) => {
   const isActive = activeValue === value;
-  
   return (
     <button 
       className={`flex-1 py-2 px-3 rounded-md font-medium text-sm transition-colors
@@ -67,7 +68,6 @@ const TabsTrigger = ({ children, value, activeValue, onSelect, className = "" })
 
 const TabsContent = ({ children, value, activeValue, className = "" }) => {
   if (value !== activeValue) return null;
-  
   return (
     <div className={className}>
       {children}
@@ -75,40 +75,40 @@ const TabsContent = ({ children, value, activeValue, className = "" }) => {
   );
 };
 
-// Exchange rate from USD to KES (simplified)
-const USD_TO_KES_RATE = 150;
-
 const PaymentSupportPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [transactionId, setTransactionId] = useState('');
-  const [amountUSD, setAmountUSD] = useState(20); // Default $20 USD
+  const [amountUSD, setAmountUSD] = useState(20);
   const [customAmount, setCustomAmount] = useState(false);
   const [tempAmount, setTempAmount] = useState('20');
+  
+  // Use the exchange rate hook
+  const { rate, loading: rateLoading } = useExchangeRate();
+  const USD_TO_KES_RATE = rate || 133; // Fallback to 133 if rate is null
 
-  // Calculate the amount in cents for Stripe (USD) or KES for M-Pesa
   const getProcessingAmount = () => {
     if (paymentMethod === 'card') {
-      return amountUSD * 100; // Stripe requires amount in cents
-    } else {
-      return Math.round(amountUSD * USD_TO_KES_RATE); // Convert to KES for M-Pesa
+      return amountUSD * 100; // Stripe requires cents
+    } else if (paymentMethod === 'mpesa') {
+      return Math.round(amountUSD * USD_TO_KES_RATE); // Convert to KES
+    } else if (paymentMethod === 'paypal') {
+      return amountUSD; // PayPal amount
     }
   };
 
   const handleStripeSuccess = (details) => {
     setPaymentSuccess(true);
     setTransactionId(details.transaction_id);
-    console.log('Stripe payment successful:', details);
   };
 
   const handleMPesaSuccess = (details) => {
     setPaymentSuccess(true);
     setTransactionId(details.transaction_id);
-    console.log('M-Pesa payment successful:', details);
   };
 
   const handlePaymentCancel = (error) => {
-    console.error('Payment cancelled or failed:', error);
+    console.error('Payment cancelled:', error);
   };
 
   const resetPaymentState = () => {
@@ -116,21 +116,17 @@ const PaymentSupportPage = () => {
     setTransactionId('');
   };
 
-  // Handler for tab changes
   const handleTabChange = (value) => {
     setPaymentMethod(value);
   };
 
-  // Predefined amount options
   const amountOptions = [5, 10, 20, 50, 100];
 
-  // Handle amount selection
   const selectAmount = (amount) => {
     setAmountUSD(amount);
     setCustomAmount(false);
   };
 
-  // Toggle custom amount input
   const toggleCustomAmount = () => {
     setCustomAmount(!customAmount);
     if (!customAmount) {
@@ -138,12 +134,10 @@ const PaymentSupportPage = () => {
     }
   };
 
-  // Handle custom amount changes
   const handleCustomAmountChange = (e) => {
     setTempAmount(e.target.value);
   };
 
-  // Apply custom amount
   const applyCustomAmount = () => {
     const amount = parseFloat(tempAmount);
     if (!isNaN(amount) && amount > 0) {
@@ -152,7 +146,6 @@ const PaymentSupportPage = () => {
     }
   };
 
-  // Handle keypress in custom amount input
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       applyCustomAmount();
@@ -205,7 +198,9 @@ const PaymentSupportPage = () => {
             <Card className="mb-6">
               <CardHeader>
                 <CardTitle>Select Payment Amount</CardTitle>
-                <CardDescription>Choose a predefined amount or enter your own</CardDescription>
+                <CardDescription>
+                  {rateLoading ? "Loading exchange rate..." : `Current rate: 1 USD ≈ ${USD_TO_KES_RATE} KES`}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
@@ -299,6 +294,15 @@ const PaymentSupportPage = () => {
                   <Phone className="w-4 h-4" />
                   <span>M-Pesa</span>
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="paypal" 
+                  activeValue={paymentMethod}
+                  onSelect={handleTabChange}
+                  className="flex items-center justify-center gap-2"
+                >
+                  <PlaySquare className="w-4 h-4" />
+                  <span>PayPal</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="card" activeValue={paymentMethod} className="mt-6">
@@ -322,6 +326,20 @@ const PaymentSupportPage = () => {
                   />
                 </div>
               </TabsContent>
+
+              <TabsContent value="paypal" activeValue={paymentMethod} className="mt-6">
+                <div className="flex justify-center">
+                  <PayPalTokenCheckout
+                    amount={getProcessingAmount()}
+                    currency="usd"
+                    description={`Technical Support Payment - $${amountUSD.toFixed(2)} USD`}
+                    onSuccess={handleMPesaSuccess}
+                    onCancel={handlePaymentCancel}
+                    clientId={process.env.NEXT_PUBLIC_PAYPAL_PUBLISHABLE_KEY}
+                    readOnlyAmount={true}
+                  />
+                </div>
+              </TabsContent>
             </Tabs>
 
             <Card>
@@ -335,15 +353,14 @@ const PaymentSupportPage = () => {
                 <div>
                   <h3 className="font-medium mb-2 text-gray-900 dark:text-white">Accepted Payment Methods</h3>
                   <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    We accept all major credit/debit cards and M-Pesa mobile payments for customers in Kenya.
+                    We accept all major credit/debit cards, M-Pesa, and PayPal payments.
                   </p>
                 </div>
 
                 <div>
                   <h3 className="font-medium mb-2 text-gray-900 dark:text-white">Is my payment secure?</h3>
                   <p className="text-gray-600 dark:text-gray-300 text-sm">
-                    Yes, all card payments are processed securely through Stripe. We never store your full card details.
-                    M-Pesa transactions are secured through Safaricom's encryption protocols.
+                    All payments are processed securely through our PCI-compliant payment processors.
                   </p>
                 </div>
 
@@ -353,8 +370,7 @@ const PaymentSupportPage = () => {
                     <div>
                       <h3 className="font-medium text-yellow-800 dark:text-yellow-300">Having trouble?</h3>
                       <p className="text-yellow-700 dark:text-yellow-200 text-sm mt-1">
-                        If you're experiencing issues with payment, please contact our support team at 
-                        support@comradehomes.me or call +254 700086852.
+                        Contact support at support@example.com or call +254 700 000 000
                       </p>
                     </div>
                   </div>

@@ -116,7 +116,7 @@ function CheckoutForm({ amount: propAmount, currency: propCurrency, description,
       });
 
       const responseData = await response.json();
-      console.log('Payment Response:', responseData);
+      // console.log('Payment Response:', responseData);
 
       if (!response.ok) {
         throw new Error(responseData.message || 'Payment processing failed');

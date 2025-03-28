@@ -1,52 +1,92 @@
-'use client'
+'use client';
 
-import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { Home, ImagePlus, X, Wand2, Landmark, BedDouble, ShowerHead, Loader, Mail, Phone, Globe, Linkedin, MessageCircle, Facebook, CreditCard, Phone as PhoneIcon } from 'lucide-react'
-import {addUserHouse} from '../app/server-action/house_actions'
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Home, ImagePlus, X, Wand2, Landmark, BedDouble, ShowerHead, Loader, Mail, Phone, Globe, Linkedin, MessageCircle, Facebook, CreditCard, Phone as PhoneIcon } from 'lucide-react';
+import { addUserHouse } from './../app/server-action/house_actions';
 import { Toaster, toast } from 'react-hot-toast';
 import StripeTokenCheckout from './stripe';
 import MpesaPayment from './Mpesa';
+import PayPalTokenCheckout from './Paypal';
+import useExchangeRate from '../hooks/useExchangeRate';
 
 const listingQuotes = [
   "A house is made of walls and beams; a home is built with love and dreams.",
   "Great spaces are born from great visions",
   "Your perfect home is waiting to be shared"
-]
+];
 
 const COUNTRIES = [
   { code: 'KE', name: 'Kenya', currency: 'KES', phoneCode: '+254' }
-]
+];
+
+const LISTING_FEE_KES = 500; // Fixed listing fee in KES
 
 export default function AddHousePage() {
-  const router = useRouter()
-  const [previewImages, setPreviewImages] = useState([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState('')
-  const [currentQuote] = useState(listingQuotes[Math.floor(Math.random() * listingQuotes.length)])
-  const [paymentMethod, setPaymentMethod] = useState('') // 'stripe' or 'mpesa'
-  const [paymentStep, setPaymentStep] = useState('form') // 'form', 'payment', 'confirmation'
-  const [transactionId, setTransactionId] = useState('')
-  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false)
+  const router = useRouter();
+  const [previewImages, setPreviewImages] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [currentQuote] = useState(listingQuotes[Math.floor(Math.random() * listingQuotes.length)]);
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [paymentStep, setPaymentStep] = useState('form');
+  const [transactionId, setTransactionId] = useState('');
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    deposit: '',
-    location: '',
-    room_count: 0,
-    type: 'apartment',
-    amenities: '',
-    email: '',
-    phone_number: '',
-    country: 'Kenya',
-    currency: 'KES',
-    linkedin: '',
-    whatsapp: '',
-    facebook: '',
-    transaction_id: ''
-  })
+  // Load draft from localStorage if exists
+  const [formData, setFormData] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedData = localStorage.getItem('propertyDraft');
+      return savedData ? JSON.parse(savedData) : {
+        title: '',
+        description: '',
+        price: '',
+        deposit: '',
+        location: '',
+        room_count: 0,
+        type: 'apartment',
+        amenities: '',
+        email: '',
+        phone_number: '',
+        country: 'Kenya',
+        currency: 'KES',
+        linkedin: '',
+        whatsapp: '',
+        facebook: '',
+        transaction_id: ''
+      };
+    }
+    return {
+      title: '',
+      description: '',
+      price: '',
+      deposit: '',
+      location: '',
+      room_count: 0,
+      type: 'apartment',
+      amenities: '',
+      email: '',
+      phone_number: '',
+      country: 'Kenya',
+      currency: 'KES',
+      linkedin: '',
+      whatsapp: '',
+      facebook: '',
+      transaction_id: ''
+    };
+  });
+
+  // Exchange rate handling
+  const { rate, loading: rateLoading } = useExchangeRate();
+  const USD_TO_KES_RATE = rate || 133;
+  const listingFeeUSD = (LISTING_FEE_KES / USD_TO_KES_RATE).toFixed(2);
+
+  // Save draft to localStorage whenever formData changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('propertyDraft', JSON.stringify(formData));
+    }
+  }, [formData]);
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -60,16 +100,16 @@ export default function AddHousePage() {
   const removeImage = (index) => {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
-  
+
   const handleChange = useCallback((e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }, [])
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  }, []);
 
   const handlePaymentMethodSelect = (method) => {
     setPaymentMethod(method);
     setPaymentStep('payment');
-  }
+  };
 
   const handlePaymentSuccess = (data) => {
     setTransactionId(data.transaction_id);
@@ -79,17 +119,21 @@ export default function AddHousePage() {
       autoClose: 3000,
       position: 'top-right',
     });
-  }
+    
+    // Clear draft after successful payment
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('propertyDraft');
+    }
+  };
 
   const handlePaymentCancel = () => {
     setPaymentStep('form');
     setPaymentMethod('');
-  }
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate if we have a transaction ID
     if (!formData.transaction_id) {
       setError("Please complete payment before publishing your listing");
       toast.error('Payment required', {
@@ -123,13 +167,12 @@ export default function AddHousePage() {
       toast.error('Failed to create listing', {
         autoClose: 3000,
         position: 'top-right',
-      })
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Render different content based on current step
   const renderContent = () => {
     switch (paymentStep) {
       case 'form':
@@ -138,8 +181,7 @@ export default function AddHousePage() {
             e.preventDefault();
             setPaymentStep('paymentSelection');
           }} className="space-y-8">
-            {/* Image Upload */}
-            <div className="space-y-4">
+                        <div className="space-y-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Property Images
               </label>
@@ -468,8 +510,15 @@ export default function AddHousePage() {
           <div className="space-y-8">
             <h2 className="text-2xl font-bold text-center">Choose Payment Method</h2>
             <p className="text-center text-gray-600 dark:text-gray-400">
-              A listing fee of KES 500 applies to publish your property.
+              A listing fee of KES {LISTING_FEE_KES} (≈ ${listingFeeUSD} USD) applies to publish your property.
             </p>
+            {rateLoading ? (
+              <p className="text-center">Loading exchange rate...</p>
+            ) : (
+              <p className="text-center text-sm text-gray-500">
+                Current rate: 1 USD ≈ {USD_TO_KES_RATE} KES
+              </p>
+            )}
             
             <div className="grid md:grid-cols-2 gap-6">
               <button
@@ -481,17 +530,37 @@ export default function AddHousePage() {
                 <p className="text-sm text-center text-gray-600 dark:text-gray-400">
                   Pay directly using your M-Pesa mobile money
                 </p>
+                <div className="font-medium text-green-600">
+                  KES {LISTING_FEE_KES}
+                </div>
+              </button>
+              
+              <button
+                onClick={() => handlePaymentMethodSelect('paypal')}
+                className="p-6 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center space-y-4"
+              >
+                <CreditCard className="h-10 w-10 text-blue-600" />
+                <h3 className="text-xl font-bold">PayPal</h3>
+                <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+                  Pay using PayPal or credit/debit card
+                </p>
+                <div className="font-medium text-blue-600">
+                  ${listingFeeUSD} USD
+                </div>
               </button>
               
               <button
                 onClick={() => handlePaymentMethodSelect('stripe')}
-                className="p-6 border-2 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all flex flex-col items-center space-y-4"
+                className="p-6 border-2 rounded-xl hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all flex flex-col items-center space-y-4"
               >
-                <CreditCard className="h-10 w-10 text-blue-600" />
+                <CreditCard className="h-10 w-10 text-purple-600" />
                 <h3 className="text-xl font-bold">Card Payment</h3>
                 <p className="text-sm text-center text-gray-600 dark:text-gray-400">
                   Pay securely using credit or debit card
                 </p>
+                <div className="font-medium text-purple-600">
+                  KES {LISTING_FEE_KES}
+                </div>
               </button>
             </div>
             
@@ -518,21 +587,42 @@ export default function AddHousePage() {
             {paymentMethod === 'mpesa' ? (
               <div>
                 <h2 className="text-xl font-bold mb-4">M-Pesa Payment</h2>
+                <p className="mb-4 text-gray-600 dark:text-gray-400">
+                  You will receive an M-Pesa push notification to complete payment of KES {LISTING_FEE_KES}.
+                </p>
                 <MpesaPayment 
-                  amount={500}
+                  amount={LISTING_FEE_KES}
                   phoneNumber={`254${formData.phone_number}`}
                   onSuccess={handlePaymentSuccess}
                   onCancel={handlePaymentCancel}
                   propertyTitle={formData.title}
                 />
               </div>
-            ) : (
+            ) : paymentMethod === 'stripe' ? (
               <div>
                 <h2 className="text-xl font-bold mb-4">Card Payment</h2>
+                <p className="mb-4 text-gray-600 dark:text-gray-400">
+                  Complete payment of KES {LISTING_FEE_KES} using your credit or debit card.
+                </p>
                 <StripeTokenCheckout 
-                  amount={500}
+                  amount={LISTING_FEE_KES * 100} // Convert to cents
                   currency="KES"
                   description={`Listing fee for ${formData.title}`}
+                  onSuccess={handlePaymentSuccess}
+                  onCancel={handlePaymentCancel}
+                />
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-xl font-bold mb-4">PayPal Payment</h2>
+                <p className="mb-4 text-gray-600 dark:text-gray-400">
+                  Complete payment of ${listingFeeUSD} USD (≈ KES {LISTING_FEE_KES}) using PayPal.
+                </p>
+                <PayPalTokenCheckout 
+                  amount={listingFeeUSD}
+                  currency="USD"
+                  description={`Listing fee for ${formData.title}`}
+                  clientId={process.env.NEXT_PUBLIC_PAYPAL_PUBLISHABLE_KEY}
                   onSuccess={handlePaymentSuccess}
                   onCancel={handlePaymentCancel}
                 />
@@ -558,7 +648,11 @@ export default function AddHousePage() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-green-800 dark:text-green-400 mb-2">Payment Successful!</h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">Your payment has been processed successfully.</p>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {paymentMethod === 'mpesa' ? `KES ${LISTING_FEE_KES}` : 
+                 paymentMethod === 'paypal' ? `$${listingFeeUSD} USD` : 
+                 `KES ${LISTING_FEE_KES}`} payment received.
+              </p>
               <div className="bg-white dark:bg-gray-800 p-4 rounded-lg inline-block">
                 <p className="font-medium">Transaction ID:</p>
                 <p className="font-mono text-lg">{transactionId}</p>
@@ -649,5 +743,5 @@ export default function AddHousePage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
