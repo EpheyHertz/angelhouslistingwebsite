@@ -168,6 +168,7 @@ export default function AddHousePage() {
       toast.success("House created successfully");
   
     } catch (err) {
+      console.error("Error ocuured:", err)
       setError(err.message || "Failed to create listing");
       toast.error(err.message || "Failed to create listing");
     } finally {

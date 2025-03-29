@@ -6,7 +6,7 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const { amount, currency, token,name,email,city } = body;
-    console.log('Payment request:', body);
+    // console.log('Payment request:', body);
 
     // Validate required fields
     if (!amount || !currency || !token) {
