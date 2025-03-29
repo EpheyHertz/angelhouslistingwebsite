@@ -3,87 +3,48 @@ import { api } from "../../../lib/api/server";
 
 export async function POST(request) {
   try {
-    const houseData = await request.json();
+    const formData = await request.formData();
 
-    // Validate houseData exists
-    if (!houseData) {
-      return NextResponse.json(
-        { 
-          success: false,
-          message: "House data cannot be empty" 
-        },
-        { status: 400 }
-      );
-    }
+    // ✅ Parse JSON `houseData`
 
-    const response = await api.post(`/houses/`, houseData);
+    const houseData = JSON.parse(formData.get("houseData"));
+   
+    // ✅ Reconstruct FormData properly
+    const formattedFormData = new FormData();
 
-    // Check if the response status is not 201 (Created)
+    // ✅ Append each field individually (FastAPI requires separate form fields)
+    Object.entries(houseData).forEach(([key, value]) => {
+      formattedFormData.append(key, value);
+    });
+
+    // ✅ Append images correctly
+    const images = formData.getAll("images"); // Get all uploaded images
+    images.forEach((image) => {
+      formattedFormData.append("images", image);
+    });
+
+    // ✅ Send to FastAPI using `multipart/form-data`
+    // console.log("Full Data to Backend", formattedFormData);
+
+    const response = await api.post("/houses/", formattedFormData);
+
     if (response.status !== 201) {
       return NextResponse.json(
-        { 
-          success: false,
-          message: `Failed to add house. Status: ${response.status}` 
-        },
+        { success: false, message: `Failed to add house. Status: ${response.status}` },
         { status: response.status }
       );
     }
 
-    // Ensure the response contains data
-    if (!response.data || !response.data.house) {
-      return NextResponse.json(
-        { 
-          success: false,
-          message: "Invalid or empty response from server." 
-        },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(
-      {
-        success: true,
-        data: response.data.house,
-        message: response.data.message || "House created successfully",
-        status: 201,
-      },
+      { success: true, data: response.data.house, message: "House created successfully" },
       { status: 201 }
     );
 
   } catch (error) {
     console.error("Error in addUserHouse:", error);
 
-    // Check for Axios response error (server error)
-    if (error.response) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: error.response.data?.detail || `Server error: ${error.response.statusText}`,
-          status: error.response.status,
-        },
-        { status: error.response.status }
-      );
-    }
-
-    // Handle network errors
-    if (error.request) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "No response from server. Please check your internet connection.",
-          status: 503,
-        },
-        { status: 503 }
-      );
-    }
-
-    // Handle unexpected errors
     return NextResponse.json(
-      {
-        success: false,
-        message: error.message || "An unknown error occurred",
-        status: 500,
-      },
+      { success: false, message: error.message || "An unknown error occurred", status: 500 },
       { status: 500 }
     );
   }

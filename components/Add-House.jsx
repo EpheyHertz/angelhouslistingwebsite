@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Home, ImagePlus, X, Wand2, Landmark, BedDouble, ShowerHead, Loader, Mail, Phone, Globe, Linkedin, MessageCircle, Facebook, CreditCard, Phone as PhoneIcon } from 'lucide-react';
-import { addUserHouse } from './../app/server-action/house_actions';
 import { Toaster, toast } from 'react-hot-toast';
 import StripeTokenCheckout from './stripe';
 import MpesaPayment from './Mpesa';
@@ -131,96 +130,50 @@ export default function AddHousePage() {
     setPaymentMethod('');
   };
 
-  const addHouse = async (houseData) => { 
-    // Input validation
-    if (!houseData || typeof houseData !== 'object' || Object.keys(houseData).length === 0) {
-      return {
-        success: false,
-        message: "House data is required and must be a non-empty object",
-        status: 400
-      };
-    }
-  
-    try {
-      const response = await fetch('/apis/houses/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(houseData)
-      });
-  
-      const data = await response.json();
-  
-      if (!response.ok) {
-        return {
-          success: false,
-          message: data.message || `Request failed with status ${response.status}`,
-          status: response.status,
-          errors: data.errors // Include validation errors if available
-        };
-      }
-  
-      return {
-        success: true,
-        data: data.data, // The created house data
-        message: data.message || "House added successfully",
-        status: response.status
-      };
-  
-    } catch (error) {
-      console.error('Failed to add house:', error);
-      return {
-        success: false,
-        message: error.message || "Network error: Could not connect to server",
-        status: 500
-      };
-    }
-  };
-  
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     if (!formData.transaction_id) {
       setError("Please complete payment before publishing your listing");
-      toast.error('Payment required', {
-        autoClose: 3000,
-        position: 'top-right',
-      });
+      toast.error("Payment required", { autoClose: 3000, position: "top-right" });
       return;
     }
-    
+  
     setIsSubmitting(true);
     setError("");
   
     try {
       const formPayload = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        formPayload.append(key, value);
+  
+      // 1. Stringify the JSON data and append as a single field
+      formPayload.append('houseData', JSON.stringify(formData));
+  
+      // 2. Append images with proper file names
+      previewImages.forEach(({ file }, index) => {
+        formPayload.append(`images`, file, `image-${Date.now()}-${index}.${file.name.split('.').pop()}`);
       });
-      previewImages.forEach(({ file }) => formPayload.append("images", file));
   
-      const response = await addHouse(formPayload);
+      const response = await fetch("/apis/houses/add", {
+        method: "POST",
+        body: formPayload, // Let browser set Content-Type with boundary
+      });
   
-      if (response.success) {
-        router.push(`/houses/${response.data.id}?id=${response.data.id}`);
-        toast.success('House created successfully', {
-          autoClose: 3000,
-          position: 'top-right',
-        });
+      const data = await response.json();
+  
+      if (!response.ok) {
+        throw new Error(data.message || `Request failed with status ${response.status}`);
       }
+  
+      router.push(`/houses/${data.data.id}?id=${data.data.id}`);
+      toast.success("House created successfully");
+  
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create listing");
-      toast.error('Failed to create listing', {
-        autoClose: 3000,
-        position: 'top-right',
-      });
+      setError(err.message || "Failed to create listing");
+      toast.error(err.message || "Failed to create listing");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const renderContent = () => {
     switch (paymentStep) {
       case 'form':
