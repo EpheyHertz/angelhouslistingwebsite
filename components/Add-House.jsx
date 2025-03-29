@@ -130,6 +130,54 @@ export default function AddHousePage() {
     setPaymentStep('form');
     setPaymentMethod('');
   };
+
+  const addHouse = async (houseData) => { 
+    // Input validation
+    if (!houseData || typeof houseData !== 'object' || Object.keys(houseData).length === 0) {
+      return {
+        success: false,
+        message: "House data is required and must be a non-empty object",
+        status: 400
+      };
+    }
+  
+    try {
+      const response = await fetch('/apis/houses/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(houseData)
+      });
+  
+      const data = await response.json();
+  
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || `Request failed with status ${response.status}`,
+          status: response.status,
+          errors: data.errors // Include validation errors if available
+        };
+      }
+  
+      return {
+        success: true,
+        data: data.data, // The created house data
+        message: data.message || "House added successfully",
+        status: response.status
+      };
+  
+    } catch (error) {
+      console.error('Failed to add house:', error);
+      return {
+        success: false,
+        message: error.message || "Network error: Could not connect to server",
+        status: 500
+      };
+    }
+  };
+  
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -153,7 +201,7 @@ export default function AddHousePage() {
       });
       previewImages.forEach(({ file }) => formPayload.append("images", file));
   
-      const response = await addUserHouse(formPayload);
+      const response = await addHouse(formPayload);
   
       if (response.success) {
         router.push(`/houses/${response.data.id}?id=${response.data.id}`);
@@ -605,7 +653,7 @@ export default function AddHousePage() {
                   Complete payment of KES {LISTING_FEE_KES} using your credit or debit card.
                 </p>
                 <StripeTokenCheckout 
-                  amount={LISTING_FEE_KES * 100} // Convert to cents
+                  amount={LISTING_FEE_KES} // Convert to cents
                   currency="KES"
                   description={`Listing fee for ${formData.title}`}
                   onSuccess={handlePaymentSuccess}
