@@ -8,7 +8,7 @@ import StripeTokenCheckout from './stripe';
 import MpesaPayment from './Mpesa';
 import PayPalTokenCheckout from './Paypal';
 import useExchangeRate from '../hooks/useExchangeRate';
-
+import {compressToUnder1MB} from '../utils/imgCompressor';
 const listingQuotes = [
   "A house is made of walls and beams; a home is built with love and dreams.",
   "Great spaces are born from great visions",
@@ -87,19 +87,72 @@ export default function AddHousePage() {
     }
   }, [formData]);
 
-  const handleImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    const newPreviews = files.map((file) => ({
-      url: URL.createObjectURL(file),
-      file,
-    }));
-    setPreviewImages((prev) => [...prev, ...newPreviews]);
-  };
+  const MAX_IMAGE_SIZE_MB = 0.9; // 900KB with buffer
+  const MAX_IMAGE_WIDTH = 1200; // More aggressive width reduction
   
-  const removeImage = (index) => {
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
+  const handleImageChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+  
+    // Initial size check
+    const oversizedFiles = files.filter(file => file.size > 4 * 1024 * 1024); // 5MB
+    if (oversizedFiles.length > 0) {
+      toast.error(`Some files are too large (max 5MB initially). Please select smaller files.`);
+      return;
+    }
+  
+    const toastId = toast.loading(`Compressing ${files.length} image(s)...`);
+  
+    try {
+      const compressionResults = await Promise.allSettled(
+        files.map(file => compressToUnder1MB(file))
+      );
+  
+      const successful = [];
+      const failed = [];
+  
+      compressionResults.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          const compressedFile = result.value;
+          successful.push({
+            url: URL.createObjectURL(compressedFile),
+            file: compressedFile,
+            originalSize: files[index].size,
+            compressedSize: compressedFile.size
+          });
+        } else {
+          failed.push({
+            name: files[index].name,
+            error: result.reason.message
+          });
+        }
+      });
+  
+      setPreviewImages(prev => [...prev, ...successful]);
+  
+      toast.dismiss(toastId);
+      
+      if (successful.length > 0) {
+        const totalSaved = successful.reduce(
+          (sum, img) => sum + (img.originalSize - img.compressedSize), 0
+        );
+        toast.success(
+          `Added ${successful.length} images (saved ${(totalSaved/1024/1024).toFixed(1)}MB)`,
+          { duration: 3000 }
+        );
+      }
+  
+      if (failed.length > 0) {
+        failed.forEach(({ name, error }) => {
+          toast.error(`${name}: ${error}`, { duration: 5000 });
+        });
+      }
+  
+    } catch (error) {
+      toast.dismiss(toastId);
+      toast.error(`Error processing images: ${error.message}`);
+    }
   };
-
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -108,6 +161,14 @@ export default function AddHousePage() {
   const handlePaymentMethodSelect = (method) => {
     setPaymentMethod(method);
     setPaymentStep('payment');
+  };
+  const removeImage = (index) => {
+    setPreviewImages(prev => {
+      const newImages = [...prev];
+      const [removed] = newImages.splice(index, 1);
+      URL.revokeObjectURL(removed.url); // Clean up memory
+      return newImages;
+    });
   };
 
   const handlePaymentSuccess = (data) => {
@@ -139,36 +200,59 @@ export default function AddHousePage() {
       return;
     }
   
+    // Check individual image sizes (1MB limit per image)
+    const oversizedImages = previewImages.filter(
+      img => img.file.size > 1 * 1024 * 1024
+    );
+  
+    if (oversizedImages.length > 0) {
+      toast.error(
+        `${oversizedImages.length} images exceed 1MB limit. Please remove them.`,
+        { duration: 5000 }
+      );
+      return;
+    }
+  
+    // Check total combined size (4.2MB limit for all images)
+    const totalSizeMB = previewImages.reduce(
+      (sum, img) => sum + img.file.size, 0
+    ) / (1024 * 1024);
+  
+    if (totalSizeMB > 4.2) {
+      toast.error(
+        `Total images size ${totalSizeMB.toFixed(1)}MB exceeds 4.2MB limit. Please remove some images.`,
+        { duration: 5000 }
+      );
+      return;
+    }
+  
     setIsSubmitting(true);
     setError("");
   
     try {
       const formPayload = new FormData();
-  
-      // 1. Stringify the JSON data and append as a single field
       formPayload.append('houseData', JSON.stringify(formData));
   
-      // 2. Append images with proper file names
       previewImages.forEach(({ file }, index) => {
         formPayload.append(`images`, file, `image-${Date.now()}-${index}.${file.name.split('.').pop()}`);
       });
   
       const response = await fetch("/apis/houses/add", {
         method: "POST",
-        body: formPayload, // Let browser set Content-Type with boundary
+        body: formPayload,
       });
   
-      const data = await response.json();
-  
       if (!response.ok) {
-        throw new Error(data.message || `Request failed with status ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Request failed with status ${response.status}`);
       }
   
-      router.push(`/houses/${data.data.id}?id=${data.data.id}`);
+      const data = await response.json();
+      router.push(`/houses/${data.data.id}`);
       toast.success("House created successfully");
   
     } catch (err) {
-      console.error("Error ocuured:", err)
+      console.error("Submission error:", err);
       setError(err.message || "Failed to create listing");
       toast.error(err.message || "Failed to create listing");
     } finally {
