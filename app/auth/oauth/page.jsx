@@ -45,17 +45,22 @@ export default function OAuth() {
       if (!response.ok) throw new Error('Authentication failed');
 
       const user = await response.json();
-      const tokenExpiry = expires_in 
-        ? Math.floor(Date.now() / 1000) + expires_in
-        : Math.floor(Date.now() / 1000) + 1450; // Default to ~24 minutes
-      
-      // Store token refresh timestamp
-      const tokenRefreshedAt = Math.floor(Date.now() / 1000);
+        let tokenExpiry;
+        if (expires_in) {
+          const decoded = decodeURIComponent(expires_in); // e.g. "2025-04-21 06:18:46 00:00"
+          const [datePart, timePart] = decoded.split(' ');
+          const safeDate = new Date(`${datePart}T${timePart}Z`);
+          tokenExpiry = Math.floor(safeDate.getTime() / 1000);
+        } else {
+          tokenExpiry = Math.floor(Date.now() / 1000) + 1450;
+        }
+
+  const tokenRefreshedAt = Math.floor(Date.now() / 1000);
       dispatch(
         login({
-          access_token: data.token.access_token,
-          refresh_token: data.token.refresh_token,
-          user: data.user,
+          access_token: access_token,
+          refresh_token: refresh_token,
+          user:user,
           token_expiry: tokenExpiry.toString(),
           token_refreshed_at: tokenRefreshedAt.toString()
         })
