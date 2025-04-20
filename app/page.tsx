@@ -50,7 +50,7 @@ const testimonials = [
     id: '6',
     name: 'James O\'Connor',
     role: 'Property Developer',
-    comment: 'Angel House Listing has streamlined our sales process, connecting us with serious buyers efficiently.',
+    comment: 'Comrade Homes has streamlined our sales process, connecting us with serious buyers efficiently.',
     image: 'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=128&h=128&q=80',
     rating: 4
   },
@@ -80,11 +80,10 @@ export default function Home() {
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in-down">
-              Welcome to Luxury Real Estate
+              Welcome to Comrade Homes.
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-gray-600 dark:text-gray-300 animate-fade-in-down delay-100">
-              Angel House Listing connects discerning clients with exceptional properties worldwide, 
-              combining cutting-edge technology with white-glove service for seamless transactions.
+            Comrade Homes helps students find safe, affordable housing near their campus. We connect university and college students with trusted landlords for stress-free rentals. Discover your next home, book a visit, and move in with confidence — all in one place.
             </p>
           </div>
           
